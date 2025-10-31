@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventstack
+  namespace: demo-system
+  labels:
+    app: "eventstack"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: "eventstack"
+  template:
+    metadata:
+      labels:
+        app: "eventstack"
+    spec:
+      serviceAccountName: eventstack
+      volumes:
+        - emptyDir: {}
+          name: tmp-dir
+      containers:
+      - name: etcd
+        image: gcr.io/etcd-development/etcd:v3.6.1
+        command: ["etcd"]
+        args:
+        - --listen-client-urls=http://0.0.0.0:2379
+        - --advertise-client-urls=http://etcd.demo-system.svc.cluster.local:2379
+        - --listen-metrics-urls=http://0.0.0.0:2381
+        - --data-dir=/tmp
+        - --name=krateo-etcd
+        - --log-level=error
+        - --quota-backend-bytes=33554432   # <--- 32 MB
+        ports:
+        - containerPort: 2379
+          hostPort: 2379
+          protocol: TCP
+      - name: sweeper
+        image: kind.local/sweeper:latest
+        imagePullPolicy: Never
+        args:
+        - --etcd-servers=http://localhost:2379
+        - --debug=true
+        - --port=8082
+        - --cleanup-threshold=0.8
+        - --monitoring-interval=15s
+        ports:
+        - name: http
+          containerPort: 8082
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-dir
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000

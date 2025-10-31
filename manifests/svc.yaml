@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sweeper
+  namespace: demo-system
+spec:
+  selector:
+    app: sweeper
+  type: NodePort
+  ports:
+  - name: http
+    port: 8082
+    targetPort: http
+    protocol: TCP
+    nodePort: 30082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd
+  namespace: demo-system
+spec:
+  selector:
+    app: eventstack
+  ports:
+    - name: client
+      port: 2379
+      targetPort: 2379
+      protocol: TCP

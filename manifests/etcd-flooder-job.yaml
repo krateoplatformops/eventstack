@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: etcd-flooder
+  namespace: demo-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: etcd-flooder
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: flooder
+        image: milvusdb/etcd:latest
+        command:
+          - /bin/bash
+          - -c
+        args:
+          - |
+            echo "Starting etcd flooder test..."
+            set -e
+            
+            BASE_RATIO=80  # percentage of base keys
+            ENDPOINT="http://etcd:2379"
+
+            while true; do
+              rand=$((RANDOM % 100))
+
+              if [ $rand -lt $BASE_RATIO ]; then
+                # base key: krateo.io.events/<uuid>
+                key="krateo.io.events/$(cat /proc/sys/kernel/random/uuid)"
+              else
+                # comp key: krateo.io.events/comp-<uuid1>/<uuid2>
+                key="krateo.io.events/comp-$(cat /proc/sys/kernel/random/uuid)"
+              fi
+
+              val=$(head -c 512 </dev/urandom | base64 | tr -d '\n')
+              etcdctl --endpoints=${ENDPOINT} put "${key}" "${val}" >/dev/null 2>&1 || true
+            done
+
+            echo "Flooder job completed."
+        env:
+          - name: ETCDCTL_API
+            value: "3"
