@@ -6,6 +6,7 @@ on:
       - 'eventrouter/**'
     branches:
       - main
+  workflow_dispatch:
 
 env:
   MODULE: eventrouter
@@ -62,3 +63,7 @@ jobs:
           # Usa cache GitHub anziché push su :cache
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Inspect local image
+        run: |
+          docker buildx imagetools inspect ${{ env.GHCR_REPO }}/${{ env.MODULE }}:${{ env.LATEST_TAG }}
