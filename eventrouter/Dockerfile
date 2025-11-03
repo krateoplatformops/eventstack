@@ -29,7 +29,7 @@ ARG COMMIT_HASH
 
 # Build
 RUN CGO_ENABLED=0 GO111MODULE=on go build -a -a -ldflags "-X main.Build=${COMMIT_HASH}" -o /bin/eventrouter ./main.go && \
-    strip /bin/sweeventroutereper
+    strip /bin/eventrouter
 
 # Deployment environment
 # ----------------------
