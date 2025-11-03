@@ -32,12 +32,31 @@ jobs:
 
       - name: Extract version
         run: |
-          APP_VERSION=${GITHUB_REF#refs/tags/${{ env.MODULE }}/}
-          APP_VERSION="${APP_VERSION:-0.0.1}"
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-          CHART_VERSION=${GITHUB_REF#refs/tags/${{ env.MODULE }}-chart/}
-          CHART_VERSION="${CHART_VERSION:-0.0.1}"
-          echo "CHART_VERSION=$CHART_VERSION" >> $GITHUB_ENV
+          set -euo pipefail
+          git fetch --tags --force
+
+          APP_VERSION="$(
+            git tag -l '${{ env.MODULE }}/*' --sort=-version:refname \
+            | head -n1 || true
+          )"
+
+          CHART_VERSION="$(
+            git tag -l '${{ env.MODULE }}-chart/*' --sort=-version:refname \
+            | head -n1 || true
+          )"
+
+          # fallbacks
+          APP_VERSION="${APP_VERSION:-${{ env.MODULE }}/0.0.1}"
+          CHART_VERSION="${CHART_VERSION:${{ env.MODULE }}-chart/0.0.1}"
+
+          # strip the prefix to get just the version
+          APP_VERSION="${APP_VERSION#${{ env.MODULE }}/}"
+          CHART_VERSION="${CHART_VERSION#chart/}"
+
+          {
+            echo "APP_VERSION=$APP_VERSION"
+            echo "CHART_VERSION=$CHART_VERSION"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Echo
         run: |
@@ -45,16 +64,16 @@ jobs:
           echo "CHART_VERSION=${{ env.CHART_VERSION }}"
 
       - name: Replace CHART_VERSION in chart/Chart.yaml
-        run: sed -i 's/CHART_VERSION/${{ steps.tags.outputs.latest_chart }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+        run: sed -i 's/CHART_VERSION/${{ env.CHART_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
       - name: Replace APP_VERSION in Chart.yaml
-        run: sed -i 's/APP_VERSION/${{ steps.tags.outputs.latest_autopilot }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+        run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.1.0
 
       - name: Helm lint chart
-        run: helm lint ./chart
+        run: helm lint ./${{ env.MODULE }}-chart
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1
