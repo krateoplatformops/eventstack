@@ -25,7 +25,6 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/${{ env.MODULE }}/}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          # Generate a latest tag as well
           echo "LATEST_TAG=latest" >> $GITHUB_ENV
 
       - name: Docker meta
@@ -49,7 +48,7 @@ jobs:
         with:
           install: true
 
-      - name: Build and push multi-arch image with cache
+      - name: Build and push multi-arch image
         uses: docker/build-push-action@v5
         with:
           context: ./sweeper
@@ -58,17 +57,11 @@ jobs:
           push: true
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=registry,ref=${{ env.GHCR_REPO }}/${{ env.MODULE }}:cache
-          cache-to: type=registry,ref=${{ env.GHCR_REPO }}/${{ env.MODULE }}:cache,mode=max
+          # Usa cache GitHub anziché push su :cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Inspect multi-arch image
+      - name: Inspect pushed image
         run: |
           docker buildx imagetools inspect ${{ env.GHCR_REPO }}/${{ env.MODULE }}:${{ env.VERSION }}
           docker buildx imagetools inspect ${{ env.GHCR_REPO }}/${{ env.MODULE }}:${{ env.LATEST_TAG }}
-
-      - name: Push multi-arch manifest explicitly
-        run: |
-          docker buildx imagetools create \
-            -t ${{ env.GHCR_REPO }}/${{ env.MODULE }}:${{ env.VERSION }} \
-            -t ${{ env.GHCR_REPO }}/${{ env.MODULE }}:${{ env.LATEST_TAG }} \
-            ${{ env.GHCR_REPO }}/${{ env.MODULE }}@${{ steps.meta.outputs.digest }}
