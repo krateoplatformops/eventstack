@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "eventsse.fullname" . }}
+  labels:
+    {{- include "eventsse.labels" . | nindent 4 }}
+data:
+  EVENTSSE_PORT: "{{ .Values.service.port }}"
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
