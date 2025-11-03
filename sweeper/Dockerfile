@@ -37,7 +37,7 @@ FROM gcr.io/distroless/static:nonroot
 #COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder /bin/auger /bin/auger
+COPY --from=builder /bin/sweeper /bin/sweeper
 
 USER nonroot:nonroot
 
