@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-service-1
+  namespace: demo-system
+  labels:
+    krateo.io/composition-id: abcde12345
+  creationTimestamp: "2024-07-05T07:32:32Z"
+  #uid: 383b7f73-bdfe-4817-a06d-b38e6e655689
+spec:
+  clusterIP: 10.96.139.206
+  clusterIPs:
+  - 10.96.139.206
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: sse
+    nodePort: 30081
+    port: 80
+    protocol: TCP
+    targetPort: 8181
+  selector:
+    app: eventsse
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Event
+metadata:
+  name: fake-event-1
+  namespace: demo-system
+  #uid: 90e8c2fe-a54f-4e74-962d-8e6abbce196d
+type: Warning
+firstTimestamp: "2024-07-05T07:33:07Z"
+lastTimestamp: "2024-07-05T07:33:09Z"
+message: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...'
+involvedObject:
+  apiVersion: v1
+  kind: Service
+  name: fake-service-1
+  namespace: demo-system
+  #resourceVersion: "17223"
+  uid: 383b7f73-bdfe-4817-a06d-b38e6e655689
+reason: LoremIpsum
+source:
+  component: krateo
