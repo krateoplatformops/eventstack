@@ -67,12 +67,10 @@ jobs:
           echo "After strip → APP_VERSION='${APP_VERSION}'"
           echo "After strip → CHART_VERSION='${CHART_VERSION}'"
 
-          echo
-          echo "=== Final results written to GITHUB_OUTPUT ==="
           {
             echo "APP_VERSION=$APP_VERSION"
             echo "CHART_VERSION=$CHART_VERSION"
-          } | tee -a "$GITHUB_OUTPUT"
+          } >> "$GITHUB_ENV"
 
       - name: Echo
         run: |
