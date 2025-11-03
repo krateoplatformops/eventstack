@@ -93,13 +93,23 @@ jobs:
         uses: helm/kind-action@v1
         with:
           node_image: kindest/node:${{ matrix.k8s_version }}
-   
+
+      - name: Install eventrouter with standard configuration
+        run: |
+          helm repo add krateo https://charts.krateo.io
+          helm repo update krateo
+          helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
+
       - name: Install chart with standard configuration
         run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait
 
       - name: Wait for deployment to become Available
         run: kubectl wait deployment ${{ env.MODULE }} --for condition=Available=True --timeout=120s --namespace krateo-system
 
-      - name: Get events
+      - name: Helm list -A
+        if: always()
+        run: helm list -A
+
+      - name: Get events -A
         if: always()
         run: kubectl get events -A --sort-by='.lastTimestamp'
