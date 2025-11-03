@@ -47,11 +47,11 @@ jobs:
 
           # fallbacks
           APP_VERSION="${APP_VERSION:-${{ env.MODULE }}/0.0.1}"
-          CHART_VERSION="${CHART_VERSION:${{ env.MODULE }}-chart/0.0.1}"
+          CHART_VERSION="${CHART_VERSION:-${{ env.MODULE }}-chart/0.0.1}"
 
-          # strip the prefix to get just the version
-          APP_VERSION="${APP_VERSION#${{ env.MODULE }}/}"
-          CHART_VERSION="${CHART_VERSION#chart/}"
+          # strip prefix safely: keep only the bit after the last '/'
+          APP_VERSION="${APP_VERSION##*/}"
+          CHART_VERSION="${CHART_VERSION##*/}"
 
           {
             echo "APP_VERSION=$APP_VERSION"
