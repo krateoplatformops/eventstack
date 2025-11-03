@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'eventrouter/**'
+      - '.github/workflows/eventrouter-release-pullrequest.yaml'
     branches:
       - main
   workflow_dispatch:

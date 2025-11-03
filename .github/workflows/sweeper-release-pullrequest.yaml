@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'sweeper/**'
+      - '.github/workflows/sweeper-release-pullrequest.yaml'
     branches:
       - main
   workflow_dispatch:

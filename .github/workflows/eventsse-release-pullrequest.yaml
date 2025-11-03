@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'eventsse/**'
+      - '.github/workflows/eventsse-release-pullrequest.yaml'
     branches:
       - main
   workflow_dispatch:

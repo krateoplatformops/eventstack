@@ -36,28 +36,43 @@ jobs:
           set -euo pipefail
           git fetch --tags --force
 
+          echo "=== TAGS IN REPO (sorted) ==="
+          git tag -l --sort=-version:refname | cat
+
+          echo
+          echo "=== Searching latest tags for module '${{ env.MODULE }}' ==="
           APP_VERSION="$(
             git tag -l '${{ env.MODULE }}/*' --sort=-version:refname \
             | head -n1 || true
           )"
+          echo "Raw APP_VERSION tag: '${APP_VERSION}'"
 
           CHART_VERSION="$(
             git tag -l '${{ env.MODULE }}-chart/*' --sort=-version:refname \
             | head -n1 || true
           )"
+          echo "Raw CHART_VERSION tag: '${CHART_VERSION}'"
 
-          # fallbacks
+          echo
+          echo "=== Applying fallbacks if empty ==="
           APP_VERSION="${APP_VERSION:-${{ env.MODULE }}/0.0.1}"
           CHART_VERSION="${CHART_VERSION:-${{ env.MODULE }}-chart/0.0.1}"
+          echo "After fallback → APP_VERSION='${APP_VERSION}'"
+          echo "After fallback → CHART_VERSION='${CHART_VERSION}'"
 
-          # strip prefix safely: keep only the bit after the last '/'
+          echo
+          echo "=== Stripping prefix (keep only part after last '/') ==="
           APP_VERSION="${APP_VERSION##*/}"
           CHART_VERSION="${CHART_VERSION##*/}"
+          echo "After strip → APP_VERSION='${APP_VERSION}'"
+          echo "After strip → CHART_VERSION='${CHART_VERSION}'"
 
+          echo
+          echo "=== Final results written to GITHUB_OUTPUT ==="
           {
             echo "APP_VERSION=$APP_VERSION"
             echo "CHART_VERSION=$CHART_VERSION"
-          } >> "$GITHUB_OUTPUT"
+          } | tee -a "$GITHUB_OUTPUT"
 
       - name: Echo
         run: |
