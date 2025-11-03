@@ -101,7 +101,7 @@ jobs:
           helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
 
       - name: Install chart with standard configuration
-        run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait
+        run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
 
       - name: Wait for deployment to become Available
         run: kubectl wait deployment ${{ env.MODULE }} --for condition=Available=True --timeout=120s --namespace krateo-system
@@ -109,6 +109,10 @@ jobs:
       - name: Helm list -A
         if: always()
         run: helm list -A
+
+      - name: Get deployments -A
+        if: always()
+        run: kubectl get deployments -A
 
       - name: Get events -A
         if: always()
