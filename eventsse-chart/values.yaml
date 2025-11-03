@@ -108,7 +108,7 @@ tolerations: []
 affinity: {}
 
 env:
-  EVENTSSE_DEBUG: "true"
+  EVENTSSE_DEBUG: "false"
   EVENTSSE_CORS: "true"
   EVENTSSE_DUMP_ENV: "true"
   EVENTSSE_TTL: 7200 #seconds
