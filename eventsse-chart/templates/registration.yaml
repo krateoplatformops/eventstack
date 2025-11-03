@@ -1,0 +1,7 @@
+apiVersion: eventrouter.krateo.io/v1alpha1
+kind: Registration
+metadata:
+  name: {{ include "eventsse.fullname" . }}-{{ .Release.Namespace }}
+spec:
+  serviceName: Eventrouter SSE
+  endpoint: http://{{ include "eventsse.fullname" . }}-internal.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/handle

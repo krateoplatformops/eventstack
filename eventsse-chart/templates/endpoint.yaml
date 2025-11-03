@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: {{ include "eventsse.fullname" . }}-internal-endpoint
+stringData:
+  server-url: http://{{ include "eventsse.fullname" . }}-internal.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
