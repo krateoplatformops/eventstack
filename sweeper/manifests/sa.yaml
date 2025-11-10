@@ -1,5 +1,5 @@
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: eventstack
+  name: sweeper
   namespace: demo-system

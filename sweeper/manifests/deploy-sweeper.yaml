@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eventstack
+  name: sweeper
   namespace: demo-system
   labels:
-    app: "eventstack"
+    app: "sweeper"
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: "eventstack"
+      app: "sweeper"
   template:
     metadata:
       labels:
-        app: "eventstack"
+        app: "sweeper"
     spec:
-      serviceAccountName: eventstack
+      serviceAccountName: sweeper
       volumes:
         - emptyDir: {}
           name: tmp-dir
@@ -43,12 +43,12 @@ spec:
         args:
         - --etcd-servers=http://localhost:2379
         - --debug=true
-        - --port=8082
+        - --port=8081
         - --cleanup-threshold=0.8
         - --monitoring-interval=15s
         ports:
         - name: http
-          containerPort: 8082
+          containerPort: 8081
         volumeMounts:
         - mountPath: /tmp
           name: tmp-dir
