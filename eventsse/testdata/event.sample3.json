@@ -2,7 +2,7 @@
     "apiVersion": "v1",
     "kind": "Event",
     "metadata": {
-      "name": "fake-event-2",
+      "name": "fake-event-3",
       "namespace": "demo-system",
       "labels": {
         "krateo.io/composition-id": "PQRST67890"
@@ -16,7 +16,7 @@
     "involvedObject": {
       "apiVersion": "v1",
       "kind": "Service",
-      "name": "fake-service-2",
+      "name": "fake-service-3",
       "namespace": "demo-system",
       "uid": "383b7f73-bdfe-4817-a06d-b38e6e655689"
     },

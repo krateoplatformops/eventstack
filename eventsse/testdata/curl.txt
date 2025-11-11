@@ -2,6 +2,8 @@
 curl -v "http://127.0.0.1:30081/events
 curl -v "http://127.0.0.1:30081/events/ABCDE12345"
 
+curl -v -N "http://127.0.0.1:30081/pub"
+
 curl -H "Content-Type: application/json" \
     --data-binary @testdata/event.sample.json \
     http://127.0.0.1:30081/handle 
