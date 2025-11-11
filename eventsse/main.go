@@ -108,8 +108,14 @@ func main() {
 		TTL:   time.Duration(*ttlSecs) * time.Second,
 	}))
 	mux.Handle("GET /notifications", pub.SSE(watcher))
+	mux.Handle("OPTIONS /notifications", pub.SSE(watcher))
+
 	mux.Handle("GET /events", getter.Events(storage, *limit))
+	mux.Handle("OPTIONS /events", getter.Events(storage, *limit))
+
 	mux.Handle("GET /events/{composition}", getter.Events(storage, *limit))
+	mux.Handle("OPTIONS /events/{composition}", getter.Events(storage, *limit))
+
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	server := &http.Server{
