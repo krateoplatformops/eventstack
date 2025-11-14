@@ -17,7 +17,10 @@ import (
 	"github.com/krateoplatformops/eventsse/internal/handlers/health"
 	"github.com/krateoplatformops/eventsse/internal/handlers/pub"
 	"github.com/krateoplatformops/eventsse/internal/handlers/sub"
+	"github.com/krateoplatformops/eventsse/internal/middlewares/access"
 	"github.com/krateoplatformops/eventsse/internal/store"
+	"github.com/krateoplatformops/plumbing/server/use"
+	"github.com/krateoplatformops/plumbing/server/use/cors"
 	"github.com/rs/zerolog"
 
 	_ "github.com/krateoplatformops/eventsse/docs"
@@ -98,29 +101,40 @@ func main() {
 		log.Fatal().Err(err).Msg("could not create ETCD watcher")
 	}
 
-	mux := http.NewServeMux()
-
 	healthy := int32(0)
 
+	mux := http.NewServeMux()
 	mux.Handle("GET /health", health.Check(&healthy, serviceName))
 	mux.Handle("POST /handle", sub.Handle(sub.HandleOptions{
 		Store: storage,
 		TTL:   time.Duration(*ttlSecs) * time.Second,
 	}))
 	mux.Handle("GET /notifications", pub.SSE(watcher))
-	mux.Handle("OPTIONS /notifications", pub.SSE(watcher))
-
 	mux.Handle("GET /events", getter.Events(storage, *limit))
-	mux.Handle("OPTIONS /events", getter.Events(storage, *limit))
-
 	mux.Handle("GET /events/{composition}", getter.Events(storage, *limit))
-	mux.Handle("OPTIONS /events/{composition}", getter.Events(storage, *limit))
-
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	chain := use.NewChain(
+		access.Access(log),
+		use.CORS(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+			AllowedHeaders: []string{
+				"Accept",
+				"Authorization",
+				"Content-Type",
+				"X-Auth-Code",
+				"X-Krateo-TraceId",
+			},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300, // Maximum value not ignored by any of major browsers
+		}),
+	)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
-		Handler:      mux,
+		Handler:      chain.Then(mux),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 50 * time.Second,
 		IdleTimeout:  30 * time.Second,

@@ -39,20 +39,19 @@ type handler struct {
 // @Success 200 {array} types.Event
 // @Router /pub [get]
 func (r *handler) ServeHTTP(wri http.ResponseWriter, req *http.Request) {
-	// CORS
-	wri.Header().Set("Access-Control-Allow-Origin", "*")
-	wri.Header().Set("Access-Control-Allow-Methods", "GET,OPTIONS")
-	wri.Header().Set("Access-Control-Expose-Headers", "Authorization,Content-Type")
-	wri.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type")
-	wri.Header().Set("Access-Control-Allow-Credentials", "true")
+	ctx, cancel := context.WithCancel(req.Context())
+	defer cancel()
 
-	// PREFLIGHT
+	// === CORS Preflight ===
 	if req.Method == http.MethodOptions {
+		r.setCORSHeaders(wri)
 		wri.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	// SSE
+	r.setCORSHeaders(wri)
+
+	// === SSE Headers ===
 	wri.Header().Set("Content-Type", "text/event-stream")
 	wri.Header().Set("Cache-Control", "no-cache")
 	wri.Header().Set("Connection", "keep-alive")
@@ -65,14 +64,10 @@ func (r *handler) ServeHTTP(wri http.ResponseWriter, req *http.Request) {
 
 	f, ok := wri.(http.Flusher)
 	if !ok {
-		msg := "http.ResponseWriter does not implement http.Flusher"
-		log.Error().Msg(msg)
-		http.Error(wri, msg, http.StatusInternalServerError)
+		log.Error().Msg("http.ResponseWriter does not implement http.Flusher")
+		http.Error(wri, "Streaming not supported", http.StatusInternalServerError)
 		return
 	}
-
-	ctx, cancel := context.WithCancel(req.Context())
-	defer cancel()
 
 	fmt.Fprintln(wri, "event: connection-established")
 	fmt.Fprintln(wri, "id: 88888888")
@@ -140,4 +135,14 @@ func (r *handler) ServeHTTP(wri http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
+}
+
+// setCORSHeaders aggiunge header CORS generali
+func (r *handler) setCORSHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-Auth-Code, X-Krateo-TraceId")
+	w.Header().Set("Access-Control-Expose-Headers", "Link,Authorization,Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization,Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 }
