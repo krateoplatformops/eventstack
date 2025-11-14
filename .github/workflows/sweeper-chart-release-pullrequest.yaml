@@ -1,15 +1,16 @@
-name: eventsse-chart-release-pullrequest
+name: sweeper-chart-release-pullrequest
 
 on:
   pull_request:
     paths:
-      - 'eventsse-chart/**'
+      - 'sweeper-chart/**'
+      - '.github/workflows/sweeper-chart-release-pullrequest.yaml'
     branches:
       - main
   workflow_dispatch:
 
 env:
-  MODULE: eventsse
+  MODULE: sweeper
   GHCR_REPO: ghcr.io/${{ github.repository }}
 
 jobs:
@@ -35,28 +36,41 @@ jobs:
           set -euo pipefail
           git fetch --tags --force
 
+          echo "=== TAGS IN REPO (sorted) ==="
+          git tag -l --sort=-version:refname | cat
+
+          echo
+          echo "=== Searching latest tags for module '${{ env.MODULE }}' ==="
           APP_VERSION="$(
             git tag -l '${{ env.MODULE }}/*' --sort=-version:refname \
             | head -n1 || true
           )"
+          echo "Raw APP_VERSION tag: '${APP_VERSION}'"
 
           CHART_VERSION="$(
             git tag -l '${{ env.MODULE }}-chart/*' --sort=-version:refname \
             | head -n1 || true
           )"
+          echo "Raw CHART_VERSION tag: '${CHART_VERSION}'"
 
-          # fallbacks
+          echo
+          echo "=== Applying fallbacks if empty ==="
           APP_VERSION="${APP_VERSION:-${{ env.MODULE }}/0.0.1}"
           CHART_VERSION="${CHART_VERSION:-${{ env.MODULE }}-chart/0.0.1}"
+          echo "After fallback → APP_VERSION='${APP_VERSION}'"
+          echo "After fallback → CHART_VERSION='${CHART_VERSION}'"
 
-          # strip prefix safely: keep only the bit after the last '/'
+          echo
+          echo "=== Stripping prefix (keep only part after last '/') ==="
           APP_VERSION="${APP_VERSION##*/}"
           CHART_VERSION="${CHART_VERSION##*/}"
+          echo "After strip → APP_VERSION='${APP_VERSION}'"
+          echo "After strip → CHART_VERSION='${CHART_VERSION}'"
 
           {
             echo "APP_VERSION=$APP_VERSION"
             echo "CHART_VERSION=$CHART_VERSION"
-          } >> "$GITHUB_OUTPUT"
+          } >> "$GITHUB_ENV"
 
       - name: Echo
         run: |
@@ -79,13 +93,30 @@ jobs:
         uses: helm/kind-action@v1
         with:
           node_image: kindest/node:${{ matrix.k8s_version }}
-   
+
+      - name: Install eventrouter with standard configuration
+        run: |
+          helm repo add krateo https://charts.krateo.io
+          helm repo update krateo
+          helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
+
+      - name: Install eventsse-etcd with standard configuration
+        run: helm install eventsse-etcd krateo/etcd --create-namespace -n krateo-system --wait
+
       - name: Install chart with standard configuration
-        run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait
+        run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
 
       - name: Wait for deployment to become Available
         run: kubectl wait deployment ${{ env.MODULE }} --for condition=Available=True --timeout=120s --namespace krateo-system
 
-      - name: Get events
+      - name: Helm list -A
+        if: always()
+        run: helm list -A
+
+      - name: Get deployments -A
+        if: always()
+        run: kubectl get deployments -A
+
+      - name: Get events -A
         if: always()
         run: kubectl get events -A --sort-by='.lastTimestamp'
