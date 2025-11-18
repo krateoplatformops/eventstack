@@ -1,9 +1,9 @@
-name: release-tag
+name: eventrouter-chart-release-tag
 
 on:
   push:
-    tags: ["[0-9]+.[0-9]+.[0-9]+"]
-
+    tags:
+      - 'eventrouter-chart/[0-9]+.[0-9]+.[0-9]+'
 jobs:
   package:
     runs-on: ubuntu-latest

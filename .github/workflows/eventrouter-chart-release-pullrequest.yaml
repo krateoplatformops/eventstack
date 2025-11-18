@@ -1,4 +1,4 @@
-name: release-pullrequest
+name: eventrouter-chart-release-pullrequest
 
 on:
   pull_request:

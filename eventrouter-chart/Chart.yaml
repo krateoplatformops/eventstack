@@ -26,4 +26,4 @@ appVersion: APP_VERSION
 dependencies:
   - name: eventrouter-crd
     version: CHART_VERSION
-    repository: file://../crd-chart
+    repository: file://../eventrouter-crd-chart
