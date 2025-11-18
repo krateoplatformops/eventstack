@@ -183,7 +183,7 @@ jobs:
       - name: Replace APP_VERSION in ./${{ env.MODULE }}-chart/Chart.yaml
         run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
-       - name: Publish Helm chart
+      - name: Publish Helm chart
         uses: stefanprodan/helm-gh-pages@master
         with:
           token: ${{ steps.authenticate.outputs.token }}
