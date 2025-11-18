@@ -1,16 +1,16 @@
-name: eventsse-chart-release-pullrequest
+name: release-pullrequest
 
 on:
   pull_request:
     paths:
-      - 'eventsse-chart/**'
-      - '.github/workflows/eventsse-chart-release-pullrequest.yaml'
+      - 'eventrouter-chart/**'
+      - '.github/workflows/eventrouter-chart-release-pullrequest.yaml'
     branches:
       - main
   workflow_dispatch:
 
 env:
-  MODULE: eventsse
+  MODULE: eventrouter
   GHCR_REPO: ghcr.io/${{ github.repository }}
 
 jobs:
@@ -78,15 +78,18 @@ jobs:
           echo "CHART_VERSION=${{ env.CHART_VERSION }}"
 
       - name: Replace CHART_VERSION in chart/Chart.yaml
-        run: sed -i 's/CHART_VERSION/${{ env.CHART_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+        run: sed -i 's/CHART_VERSION/${{ steps.chart_version.outputs.tag }}/g' ./chart/Chart.yaml
+
+      - name: Replace CHART_VERSION in crd-chart/Chart.yaml
+        run: sed -i 's/CHART_VERSION/${{ steps.chart_version.outputs.tag }}/g' ./crd-chart/Chart.yaml
 
       - name: Replace APP_VERSION in Chart.yaml
-        run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+        run: sed -i 's/APP_VERSION/${{ steps.app_version.outputs.tag }}/g' ./chart/Chart.yaml
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.1.0
 
-      - name: Helm lint chart
+      - name: Helm lint
         run: helm lint ./${{ env.MODULE }}-chart
 
       - name: Create k8s Kind Cluster
@@ -94,17 +97,11 @@ jobs:
         with:
           node_image: kindest/node:${{ matrix.k8s_version }}
 
-      - name: Install eventrouter with standard configuration
+      - name: Install ${{ env.MODULE }} with standard configuration
         run: |
           helm repo add krateo https://charts.krateo.io
           helm repo update krateo
-          helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
-
-      - name: Install eventsse-etcd with standard configuration
-        run: helm install ${{ env.MODULE }}-etcd krateo/etcd --create-namespace -n krateo-system --wait --version 3.6.6
-
-      - name: Install chart with standard configuration
-        run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
+          helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
 
       - name: Wait for deployment to become Available
         run: kubectl wait deployment ${{ env.MODULE }} --for condition=Available=True --timeout=120s --namespace krateo-system

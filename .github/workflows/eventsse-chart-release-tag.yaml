@@ -1,13 +1,9 @@
-name: eventsse-chart-release-pullrequest
+name: eventsse-chart-release-tag
 
 on:
-  pull_request:
-    paths:
-      - 'eventsse-chart/**'
-      - '.github/workflows/eventsse-chart-release-pullrequest.yaml'
-    branches:
-      - main
-  workflow_dispatch:
+  push:
+    tags:
+      - 'eventsse-chart/[0-9]+.[0-9]+.[0-9]+'
 
 env:
   MODULE: eventsse
@@ -101,7 +97,7 @@ jobs:
           helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
 
       - name: Install eventsse-etcd with standard configuration
-        run: helm install ${{ env.MODULE }}-etcd krateo/etcd --create-namespace -n krateo-system --wait --version 3.6.6
+        run: helm install ${{ env.MODULE }}-etcd krateo/etcd --create-namespace -n krateo-system --wait
 
       - name: Install chart with standard configuration
         run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
@@ -120,3 +116,79 @@ jobs:
       - name: Get events -A
         if: always()
         run: kubectl get events -A --sort-by='.lastTimestamp'
+
+  push-chart:
+    runs-on: ubuntu-latest
+    needs: [lint-and-install]
+    steps:
+      - name: Authenticate with GitHub App
+        id: authenticate
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          echo "=== TAGS IN REPO (sorted) ==="
+          git tag -l --sort=-version:refname | cat
+
+          echo
+          echo "=== Searching latest tags for module '${{ env.MODULE }}' ==="
+          APP_VERSION="$(
+            git tag -l '${{ env.MODULE }}/*' --sort=-version:refname \
+            | head -n1 || true
+          )"
+          echo "Raw APP_VERSION tag: '${APP_VERSION}'"
+
+          CHART_VERSION="$(
+            git tag -l '${{ env.MODULE }}-chart/*' --sort=-version:refname \
+            | head -n1 || true
+          )"
+          echo "Raw CHART_VERSION tag: '${CHART_VERSION}'"
+
+          echo
+          echo "=== Applying fallbacks if empty ==="
+          APP_VERSION="${APP_VERSION:-${{ env.MODULE }}/0.0.1}"
+          CHART_VERSION="${CHART_VERSION:-${{ env.MODULE }}-chart/0.0.1}"
+          echo "After fallback → APP_VERSION='${APP_VERSION}'"
+          echo "After fallback → CHART_VERSION='${CHART_VERSION}'"
+
+          echo
+          echo "=== Stripping prefix (keep only part after last '/') ==="
+          APP_VERSION="${APP_VERSION##*/}"
+          CHART_VERSION="${CHART_VERSION##*/}"
+          echo "After strip → APP_VERSION='${APP_VERSION}'"
+          echo "After strip → CHART_VERSION='${CHART_VERSION}'"
+
+          {
+            echo "APP_VERSION=$APP_VERSION"
+            echo "CHART_VERSION=$CHART_VERSION"
+          } >> "$GITHUB_ENV"
+
+      - name: Echo
+        run: |
+          echo "APP_VERSION=${{ env.APP_VERSION }}"
+          echo "CHART_VERSION=${{ env.CHART_VERSION }}"
+
+      - name: Replace CHART_VERSION in chart/Chart.yaml
+        run: sed -i 's/CHART_VERSION/${{ env.CHART_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+
+      - name: Replace APP_VERSION in Chart.yaml
+        run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
+
+       - name: Publish Helm chart
+        uses: stefanprodan/helm-gh-pages@master
+        with:
+          token: ${{ steps.authenticate.outputs.token }}
+          charts_dir: ${{ env.MODULE }}-chart
+          charts_url: https://charts.krateo.io
+          owner: krateoplatformops
+          repository: helm-charts
+          branch: gh-pages
