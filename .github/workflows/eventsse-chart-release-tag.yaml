@@ -90,11 +90,14 @@ jobs:
         with:
           node_image: kindest/node:${{ matrix.k8s_version }}
 
-      - name: Install eventsse-etcd with standard configuration
+      - name: Install eventrouter with standard configuration
         run: |
           helm repo add krateo https://charts.krateo.io
           helm repo update krateo
-          helm install ${{ env.MODULE }}-etcd krateo/etcd --create-namespace -n krateo-system --wait --version=3.6.6
+          helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
+
+      - name: Install eventsse-etcd with standard configuration
+        run: helm install ${{ env.MODULE }}-etcd krateo/etcd --create-namespace -n krateo-system --wait --version 3.6.6
 
       - name: Install chart with standard configuration
         run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
