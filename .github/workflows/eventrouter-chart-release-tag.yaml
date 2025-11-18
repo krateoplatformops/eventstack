@@ -189,6 +189,7 @@ jobs:
         run: |
           mkdir -p _chart
           cp -R ${{ env.MODULE }}-chart _chart/
+          cp -R ${{ env.MODULE }}-crd-chart _chart/
 
       - name: Publish Helm chart
         uses: stefanprodan/helm-gh-pages@master
