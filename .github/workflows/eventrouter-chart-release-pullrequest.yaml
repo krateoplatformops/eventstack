@@ -83,7 +83,7 @@ jobs:
       - name: Replace CHART_VERSION in ./${{ env.MODULE }}-crd-chart/Chart.yaml
         run: sed -i 's/CHART_VERSION/${{ env.CHART_VERSION }}/g' ./${{ env.MODULE }}-crd-chart/Chart.yaml
 
-      - name: Replace APP_VERSION in Chart.yaml
+      - name: Replace APP_VERSION in ./${{ env.MODULE }}-chart/Chart.yaml
         run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
       - name: Set up Helm

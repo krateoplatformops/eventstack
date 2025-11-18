@@ -77,10 +77,10 @@ jobs:
           echo "APP_VERSION=${{ env.APP_VERSION }}"
           echo "CHART_VERSION=${{ env.CHART_VERSION }}"
 
-      - name: Replace CHART_VERSION in chart/Chart.yaml
+      - name: Replace CHART_VERSION in ./${{ env.MODULE }}-chart/Chart.yaml
         run: sed -i 's/CHART_VERSION/${{ env.CHART_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
-      - name: Replace APP_VERSION in Chart.yaml
+      - name: Replace APP_VERSION in ./${{ env.MODULE }}-chart/Chart.yaml
         run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
       - name: Set up Helm
@@ -94,14 +94,11 @@ jobs:
         with:
           node_image: kindest/node:${{ matrix.k8s_version }}
 
-      - name: Install eventrouter with standard configuration
+      - name: Install eventsse-etcd with standard configuration
         run: |
           helm repo add krateo https://charts.krateo.io
           helm repo update krateo
-          helm install eventrouter krateo/eventrouter --create-namespace -n krateo-system --wait
-
-      - name: Install eventsse-etcd with standard configuration
-        run: helm install eventsse-etcd krateo/etcd --create-namespace -n krateo-system --wait
+          helm install eventsse-etcd krateo/etcd --create-namespace -n krateo-system --wait --version=3.6.6
 
       - name: Install chart with standard configuration
         run: helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
