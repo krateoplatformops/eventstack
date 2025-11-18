@@ -183,11 +183,17 @@ jobs:
       - name: Replace APP_VERSION in ./${{ env.MODULE }}-chart/Chart.yaml
         run: sed -i 's/APP_VERSION/${{ env.APP_VERSION }}/g' ./${{ env.MODULE }}-chart/Chart.yaml
 
+      # Stage only the chart you want to publish
+      - name: Prepare chart dir
+        run: |
+          mkdir -p _chart
+          cp -R ${{ env.MODULE }}-chart _chart/
+
       - name: Publish Helm chart
         uses: stefanprodan/helm-gh-pages@master
         with:
           token: ${{ steps.authenticate.outputs.token }}
-          charts_dir: ${{ env.MODULE }}-chart
+          charts_dir: _chart
           charts_url: https://charts.krateo.io
           owner: krateoplatformops
           repository: helm-charts
