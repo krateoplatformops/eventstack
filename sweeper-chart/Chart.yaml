@@ -1,6 +1,6 @@
 apiVersion: v2
-name: eventsse
-description: A Helm chart for Krateo Server-Side Event
+name: sweeper
+description: A Helm chart for cleanup of Krateo Server-Side Event etcd
 
 # A chart can be either an 'application' or a 'library' chart.
 #

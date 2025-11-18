@@ -1,11 +1,11 @@
-# Default values for eventsse.
+# Default values for eventrouter.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: ghcr.io/krateoplatformops/eventstack/eventsse
+  repository: ghcr.io/krateoplatformops/eventstack/eventrouter
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -39,27 +39,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-service:
-  annotations: {}
-  type: ClusterIP
-  port: 8083
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -71,15 +50,6 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-livenessProbe:
-  httpGet:
-    path: /health
-    port: http
-readinessProbe:
-  httpGet:
-    path: /health
-    port: http
 
 autoscaling:
   enabled: false
@@ -108,13 +78,9 @@ tolerations: []
 affinity: {}
 
 env:
-  EVENTSSE_DEBUG: "false"
-  EVENTSSE_CORS: "true"
-  EVENTSSE_DUMP_ENV: "true"
-  EVENTSSE_TTL: 7200 #seconds
-  EVENTSSE_GET_LIMIT: 500
-
-etcd:
-  service:
-    name: eventsse-etcd
-    port: 2379
+  EVENT_ROUTER_DEBUG: "true"
+  EVENT_ROUTER_INSECURE: "true"
+  EVENT_ROUTER_RESYNC_INTERVAL: 3m
+  EVENT_ROUTER_THROTTLE_PERIOD: 0
+  EVENT_ROUTER_QUEUE_MAX_CAPACITY: 10
+  EVENT_ROUTER_QUEUE_WORKER_THREADS: 50
