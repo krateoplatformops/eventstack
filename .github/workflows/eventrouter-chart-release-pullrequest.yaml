@@ -101,6 +101,7 @@ jobs:
         run: |
           helm repo add krateo https://charts.krateo.io
           helm repo update krateo
+          helm dependencies build ./${{ env.MODULE }}-chart
           helm install ${{ env.MODULE }} ./${{ env.MODULE }}-chart --create-namespace -n krateo-system --wait --timeout=120s
 
       - name: Wait for deployment to become Available
