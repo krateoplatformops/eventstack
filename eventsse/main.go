@@ -28,9 +28,8 @@ import (
 )
 
 const (
-	serviceName    = "eventsse"
-	defaultLimit   = 100
-	fifoMultiplier = 10
+	serviceName  = "eventsse"
+	defaultLimit = 100
 )
 
 func main() {
