@@ -180,6 +180,8 @@ type Options struct {
 	// Addresses of the etcd servers in the cluster, including port.
 	// Optional ([]string{"localhost:2379"} by default).
 	Endpoints []string
+
+	ClientTimeout time.Duration
 }
 
 // DefaultOptions is an Options object with default values.
@@ -201,7 +203,7 @@ func NewClient(options Options) (Store, error) {
 
 	config := clientv3.Config{
 		Endpoints:   options.Endpoints,
-		DialTimeout: 2 * time.Second,
+		DialTimeout: 5 * time.Second,
 		//DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	}
 
@@ -210,7 +212,7 @@ func NewClient(options Options) (Store, error) {
 		return result, err
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	statusRes, err := cli.Status(ctxWithTimeout, options.Endpoints[0])
 	if err != nil {
@@ -220,7 +222,7 @@ func NewClient(options Options) (Store, error) {
 	}
 
 	result.c = cli
-	result.timeOut = defaultTimeout
+	result.timeOut = max(options.ClientTimeout, defaultTimeout)
 
 	return result, nil
 }

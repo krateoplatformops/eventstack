@@ -40,6 +40,8 @@ func main() {
 	limit := flag.Int("limit", env.Int("EVENTSSE_GET_LIMIT", defaultLimit),
 		"limits the number of results to return from 'Get' request")
 	endpoints := flag.String("etcd-servers", env.String("EVENTSSE_ETCD_SERVERS", "localhost:2379"), "etcd endpoints")
+	clientTimeout := flag.Duration("etcd-client-timeout",
+		env.Duration("EVENTSSE_ETCD_CLIENT_TIMEOUT", 300*time.Millisecond), "etcd client timeout")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
@@ -68,11 +70,12 @@ func main() {
 
 	if log.Debug().Enabled() {
 		evt := log.Debug().
-			Str("debug", fmt.Sprintf("%t", *debugOn)).
-			Str("port", fmt.Sprintf("%d", *port)).
-			Str("ttl", fmt.Sprintf("%d", *ttlSecs)).
-			Str("limit", fmt.Sprintf("%d", *limit)).
-			Str("etcd-endpoints", *endpoints)
+			Bool("debug", *debugOn).
+			Int("port", *port).
+			Int("ttl", *ttlSecs).
+			Int("limit", *limit).
+			Str("etcd-endpoints", *endpoints).
+			Dur("etcd-client-timeout", *clientTimeout)
 
 		if *dumpEnv {
 			evt = evt.Strs("env-vars", os.Environ())
@@ -82,7 +85,8 @@ func main() {
 	}
 
 	opts := store.Options{
-		Endpoints: strings.Split(*endpoints, ","),
+		Endpoints:     strings.Split(*endpoints, ","),
+		ClientTimeout: *clientTimeout,
 	}
 	storage, err := store.NewClient(opts)
 	if err != nil {

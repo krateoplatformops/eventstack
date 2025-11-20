@@ -71,11 +71,9 @@ func (c *pusher) Handle(evt corev1.Event) {
 		return
 	}
 
-	if len(evt.ManagedFields) == 0 {
-		evt.ManagedFields = nil
-	}
+	out := minifyEvent(evt)
 
-	labels := evt.GetLabels()
+	labels := out.GetLabels()
 	if labels == nil {
 		labels = map[string]string{
 			keyCompositionID: compositionId,
@@ -83,9 +81,9 @@ func (c *pusher) Handle(evt corev1.Event) {
 	} else {
 		labels[keyCompositionID] = compositionId
 	}
-	evt.SetLabels(labels)
+	out.SetLabels(labels)
 
-	c.notifyAll(all, evt)
+	c.notifyAll(all, out)
 }
 
 func (c *pusher) notifyAll(all map[string]v1alpha1.RegistrationSpec, evt corev1.Event) {

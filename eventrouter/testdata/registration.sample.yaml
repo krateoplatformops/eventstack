@@ -1,7 +1,7 @@
 apiVersion: eventrouter.krateo.io/v1alpha1
 kind: Registration
 metadata:
-  name: httpecho-registration
+  name: eventrouter-echo
 spec:
-  serviceName: HTTP Echo
-  endpoint: http://127.0.0.1:9090/handle
+  serviceName: EventRouter Echo
+  endpoint: http://127.0.0.1:9092/handle
