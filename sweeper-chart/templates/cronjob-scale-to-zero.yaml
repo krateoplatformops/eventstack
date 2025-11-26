@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "sweeper.fullname" . }}-scale-to-zero
+spec:
+  schedule: {{ default "0 6 * * *" .Values.scaler.scaleToZero.schedule | quote }}
+  timeZone: {{ default "Europe/Rome" .Values.scaler.timeZone | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "sweeper.serviceAccountName" . }}
+          containers:
+            - name: scaler
+              image: alpine/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Scaling {{ include "sweeper.fullname" . }} to 0 replicas"
+                  kubectl scale deployment {{ include "sweeper.fullname" . }} \
+                    --replicas=0 \
+                    -n {{ .Release.Namespace }}
+          restartPolicy: OnFailure

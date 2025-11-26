@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "sweeper.fullname" . }}-scale-to-one
+spec:
+  schedule: {{ default "0 22 * * *" .Values.scaler.scaleToOne.schedule | quote }}
+  timeZone: {{ default "Europe/Rome" .Values.scaler.timeZone | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "sweeper.serviceAccountName" . }}
+          containers:
+            - name: scaler
+              image: alpine/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Scaling {{ include "sweeper.fullname" . }} to 1 replica"
+                  kubectl scale deployment {{ include "sweeper.fullname" . }} \
+                    --replicas=1 \
+                    -n {{ .Release.Namespace }}
+          restartPolicy: OnFailure
