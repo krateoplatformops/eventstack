@@ -169,3 +169,10 @@ etcd:
   service:
     name: eventsse-etcd
     port: 2379
+
+scaler:
+  timeZone: "Europe/Rome"
+  scaleToZero:
+    schedule: "0 6 * * *"   # default: 06:00
+  scaleToOne:
+    schedule: "0 22 * * *"  # default: 22:00
