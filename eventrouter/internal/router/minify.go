@@ -21,12 +21,9 @@ func minifyEvent(e corev1.Event) corev1.Event {
 		Type:    e.Type,
 	}
 
-	// EventTime può rimanere
 	out.EventTime = e.EventTime
-
-	// Timestamp legacy azzerati
-	out.FirstTimestamp = metav1.Time{}
-	out.LastTimestamp = metav1.Time{}
+	out.FirstTimestamp = e.FirstTimestamp
+	out.LastTimestamp = e.LastTimestamp
 
 	// Source vuoto
 	out.Source = corev1.EventSource{}
