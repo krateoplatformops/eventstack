@@ -5,7 +5,6 @@ metadata:
   labels:
     {{- include "eventrouter.labels" . | nindent 4 }}
 data:
-  EVENT_ROUTER_NAMESPACE:  "{{ .Release.Namespace }}"
   {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}
