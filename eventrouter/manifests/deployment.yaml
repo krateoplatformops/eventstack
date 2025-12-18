@@ -23,10 +23,9 @@ spec:
         image: kind.local/eventrouter:latest
         imagePullPolicy: Never
         args:
-          - --namespace=demo-system
           - --insecure=true
           - --debug=true
-          - --v=4
+          - --v=6
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: false
