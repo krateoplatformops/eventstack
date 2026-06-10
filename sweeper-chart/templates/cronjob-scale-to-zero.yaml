@@ -12,7 +12,7 @@ spec:
           serviceAccountName: {{ include "sweeper.serviceAccountName" . }}
           containers:
             - name: scaler
-              image: alpine/kubectl:latest
+              image: "{{ .Values.scaler.image.repository }}:{{ .Values.scaler.image.tag }}"
               command:
                 - /bin/sh
                 - -c

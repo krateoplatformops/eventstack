@@ -171,6 +171,10 @@ etcd:
     port: 2379
 
 scaler:
+  # Image used by the scale-to-zero/scale-to-one cronjobs.
+  image:
+    repository: alpine/kubectl
+    tag: "1.36.0"
   timeZone: "Europe/Rome"
   scaleToZero:
     schedule: "0 6 * * *"   # default: 06:00
